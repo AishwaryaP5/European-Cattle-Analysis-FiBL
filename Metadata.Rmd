@@ -1,0 +1,279 @@
+---
+title: "Metadata"
+output: html_document
+date: "2026-10-20"
+---
+
+## 
+
+# Research Metadata
+
+## Classification and Analysis of European Cattle Breeds Using FAO DAD-IS Data
+
+### 1. Project Identification
+
+**Researcher:** Aishwarya Vinay Patil\
+**Institution:** Research Institute of Organic Agriculture (FiBL), Frick, Switzerland\
+**Academic programme:** Master's in Agroecology and Organic Farming, University of Barcelona\
+**Internship period:** 25 June – 25 September 2026\
+**Research supervisors:** Dr. María Lozano-Jaramillo and Dr. Catherine Pfeiffer\
+**Academic supervisor:** Dr. Xavier Sans Serra\
+**Programming environment:** R and RStudio\
+**Primary research area:** Animal genetic resources, cattle breed classification, livestock productivity and context-specific livestock systems.
+
+### 2. Research Purpose
+
+The analysis was undertaken to investigate whether European cattle records from the Domestic Animal Diversity Information System (DAD-IS) could be organised into meaningful classifications relevant to context-specific livestock production.
+
+The original research framework considered three dimensions:
+
+- Breed adaptedness
+
+- Production purpose
+
+- Grass-based production context
+
+Following exploratory analysis, the available data were considered insufficient to identify grass-based livestock systems reliably. The final analytical framework therefore focused on reported production purpose, breed adaptedness and selected productivity indicators.
+
+### 3. Data Provenance
+
+**Original data provider:** Food and Agriculture Organization of the United Nations (FAO)\
+**Database:** Domestic Animal Diversity Information System (DAD-IS)\
+**Source:** <https://www.fao.org/dad-is/>\
+**Data export:** <https://www.fao.org/dad-is/data/data-export/en>\
+**Species:** Cattle\
+**Export region:** Europe and the Caucasus, using the DAD-IS regional classification\
+**Original export dimensions:** 1,125 observations × 128 variables\
+**Final European dataset:** 792 observations\
+**Geographical coverage:** 44 European countries, as reported in the internship analysis\
+**Unit of observation:** National breed record (breed-country combination)
+
+A breed recorded in more than one country may appear more than once. Consequently, the number of observations does not necessarily represent the number of genetically distinct cattle breeds.
+
+**Data extraction date:** To be confirmed against the original downloaded file.
+
+### 4. Data Preparation and Processing
+
+The analytical workflow involved:
+
+1.  Importing the original DAD-IS cattle export into R.
+
+2.  Inspecting variable names, data types and dataset dimensions.
+
+3.  Filtering the original dataset using a predefined list of European countries.
+
+4.  Identifying relevant breed, country, adaptedness, production-purpose and productivity variables.
+
+5.  Examining the frequency and availability of recorded values.
+
+6.  Creating a derived production-purpose classification.
+
+7.  Retaining the original adaptedness categories.
+
+8.  Preparing indicator-specific analytical datasets.
+
+9.  Generating descriptive summaries and visualisations.
+
+10. Performing statistical comparisons.
+
+The complete European dataset was not reduced solely because productivity or adaptedness values were missing. Missing observations were assessed separately for each analysis.
+
+### 5. Production-Purpose Classification
+
+**Source variable:** `Provision Uses`
+
+Production-purpose categories were derived from the presence or absence of milk and meat within the reported uses.
+
+| Derived category | Classification rule |
+|----|----|
+| Dairy | Contains milk but not meat |
+| Meat | Contains meat but not milk |
+| Dual Purpose | Contains both milk and meat |
+| Others | Contains neither milk nor meat, including missing provision uses |
+
+The classification accommodates records reporting additional uses alongside milk or meat.
+
+**Important interpretation:** These categories represent reported uses in DAD-IS, not independently verified breeding objectives. A record classified as Dual Purpose should therefore not automatically be interpreted as a breed deliberately selected for balanced milk and beef production.
+
+### 6. Breed Adaptedness
+
+**Source variable:** `Breed classification (adaptedness)`
+
+The existing DAD-IS classifications were retained:
+
+- Exotic
+
+- Locally adapted
+
+- Native
+
+- Missing/NA
+
+Adaptedness was not inferred from production purpose, geographical classification or productivity.
+
+Missing adaptedness values were preserved in descriptive summaries and excluded only where a statistical model required a recorded adaptedness category.
+
+### 7. Core Variables and Data Dictionary
+
+| Variable | Description | Role |
+|----|----|----|
+| Country | Reporting country | Geographical filtering |
+| ISO3 | Three-letter country identifier | Country identification |
+| Breed/Most common name | Reported cattle breed name | Breed identification |
+| Breed classification (geographic) | Geographic classification recorded in DAD-IS | Descriptive information |
+| Breed classification (adaptedness) | Exotic, locally adapted, native or missing | Explanatory variable |
+| Provision Uses | Original reported production uses | Classification input |
+| Production-purpose group | Derived dairy, meat, dual-purpose or others category | Explanatory variable |
+| Milk yield per lactation (kg) AVG | Average milk yield per lactation | Response variable |
+| Annual milk yield | Reported annual milk production | Response variable |
+| Milk protein | Reported milk protein content | Response variable |
+| Milk fat | Reported milk fat content | Response variable |
+| Carcass weight (kg) | Reported carcass weight | Response variable |
+
+The exact original column names and units should be retained in the R code. Any renamed variables must be traceable to the original DAD-IS export.
+
+### 8. Classification Results
+
+**Total European cattle records: 792**
+
+| Production purpose | Records |
+|--------------------|---------|
+| Dairy              | 125     |
+| Meat               | 274     |
+| Dual Purpose       | 171     |
+| Others             | 222     |
+| **Total**          | **792** |
+
+**Adaptedness distribution**
+
+| Adaptedness     | Records |
+|-----------------|---------|
+| Native          | 298     |
+| Exotic          | 265     |
+| Locally adapted | 107     |
+| Missing         | 122     |
+| **Total**       | **792** |
+
+These counts describe database records, not unique cattle breeds or individual animals.
+
+### 9. Productivity Analysis
+
+Five productivity indicators were examined:
+
+| Indicator                | Compared groups       | Available observations |
+|--------------------------|-----------------------|------------------------|
+| Milk yield per lactation | Dairy vs Dual Purpose | 160                    |
+| Annual milk yield        | Dairy vs Dual Purpose | 62                     |
+| Milk protein             | Dairy vs Dual Purpose | 127                    |
+| Milk fat                 | Dairy vs Dual Purpose | 163                    |
+| Carcass weight           | Meat vs Dual Purpose  | 90                     |
+
+Availability was assessed separately for each indicator. Observations without a recorded value for the relevant indicator did not contribute to that indicator's statistical comparison.
+
+Zero values require interpretation according to the variable and original data. They should not automatically be treated as missing or removed without documentation.
+
+### 10. Statistical Methods
+
+**Descriptive analysis**
+
+Frequency tables, cross-tabulations and descriptive summaries were used to examine production-purpose and adaptedness distributions.
+
+**Visualisation**
+
+Boxplots were used to explore productivity distributions across the relevant categories.
+
+**Welch's two-sample t-test**
+
+Welch's tests were used to compare mean productivity between the two relevant production-purpose groups for each indicator.
+
+**Linear models and ANOVA**
+
+Linear models were used to examine the associations of production purpose, breed adaptedness and their interaction with each productivity indicator.
+
+General model structure:
+
+`Productivity ~ Production Purpose * Adaptedness`
+
+The interaction term represents a statistical interaction between the two recorded classification variables. It should not be interpreted as evidence of a biological genotype-by-environment interaction.
+
+Statistical models used complete observations for the variables required by each model. Consequently, model sample sizes differed between indicators.
+
+### 11. Missing-Data Management
+
+Missing data were retained in the master European dataset.
+
+The following principles were applied:
+
+- Missing adaptedness values remained visible in descriptive tables.
+
+- Missing productivity values were quantified for each indicator.
+
+- Productivity analyses used records with available values for the relevant outcome.
+
+- Models requiring adaptedness excluded observations without that classification.
+
+- Missing observations were not replaced with estimated values.
+
+No general imputation procedure was reported.
+
+This approach preserves visibility of incomplete records while distinguishing the complete European dataset from the smaller subsets used in statistical comparisons.
+
+### 12. Research Limitations
+
+The dataset does not contain sufficient information to establish complete livestock production contexts.
+
+In particular, it does not reliably describe:
+
+- Actual feeding systems and diets
+
+- Pasture or grazing dependence
+
+- Farm-level management practices
+
+- Environmental conditions experienced by individual herds
+
+- Breeding objectives underlying every reported production use
+
+- Complete production-system resource requirements
+
+Therefore, breed adaptedness and reported production purpose cannot independently establish whether a cattle population belongs to a grass-based, low-input or other context-specific livestock system.
+
+The analysis is exploratory and observational. Its statistical associations should not be interpreted as causal effects.
+
+### 13. Reproducibility and Versioning
+
+The analytical workflow was developed in R and RStudio, with scripts and notebooks intended for sharing through GitHub.
+
+To reproduce the analysis, another researcher would require:
+
+- The corresponding DAD-IS cattle export or a documented method of obtaining it
+
+- The list of European countries used for filtering
+
+- The original and derived variable definitions
+
+- The R analysis scripts
+
+- The R and package versions
+
+- The missing-value and statistical-analysis rules
+
+**Software versions:** To be recorded using `sessionInfo()` in R.
+
+**Repository URL:** To be added.
+
+**Report submission version:** To be identified by a Git commit or release tag.
+
+### 14. Data Ownership and Attribution
+
+The original cattle data were obtained from FAO DAD-IS.
+
+The filtering, operational classification, exploratory analysis, visualisation and statistical workflow were developed as part of the FiBL internship.
+
+The original data source must be acknowledged. Any redistribution of the downloaded dataset should comply with the applicable FAO data-use terms and any relevant FiBL requirements.
+
+### 15. Research Contribution
+
+This analysis provides a documented approach to organising European DAD-IS cattle records by reported production purpose and breed adaptedness, while comparing selected productivity indicators across the resulting groups.
+
+Its contribution is both methodological and exploratory: it demonstrates which classifications and comparisons are possible with the available breed-level information and identifies the additional data required to study context-specific livestock production systems more comprehensively.

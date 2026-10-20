@@ -1,0 +1,434 @@
+---
+title: "31 August 2026"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(stringr)
+library(readxl)
+
+```
+
+# Adaptedness classification of dual purpose breeds
+
+## Across milk yields
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(writexl)
+library(readxl)
+library(stringr)
+
+europe_data<-raw_data |> filter(Country%in% c(europe_countries <- c(
+  "Albania", "Andorra", "Austria", "Belarus", "Belgium",
+  "Bosnia and Herzegovina", "Bulgaria", "Croatia", "Cyprus",
+  "Czechia", "Denmark", "Estonia", "Finland", "France",
+  "Germany", "Greece", "Hungary", "Iceland", "Ireland",
+  "Italy", "Latvia", "Liechtenstein", "Lithuania", "Luxembourg",
+  "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands",
+  "North Macedonia", "Norway", "Poland", "Portugal", "Romania",
+  "Russia", "San Marino", "Serbia", "Slovakia", "Slovenia",
+  "Spain", "Sweden", "Switzerland", "Ukraine", "United Kingdom"
+)))
+
+provision_use_table <- europe_data |> filter(!is.na(`Provision Uses`)) |> count (`Provision Uses`, name = "No of Breeds", sort = TRUE)
+
+provision_use_table <- europe_data |>
+  filter(!is.na(`Provision Uses`)) |>
+  count(`Provision Uses`, name = "Number of breeds") |>
+  arrange(`Provision Uses`)
+
+table(europe_data$`Provision Uses`)
+
+```
+
+```{r}
+milk_data <- europe_data |>
+  mutate(
+    Purpose = case_when(
+      
+      # Contains BOTH meat and milk
+      str_detect(`Provision Uses`, regex("meat", ignore_case = TRUE)) &
+        str_detect(`Provision Uses`, regex("milk", ignore_case = TRUE))
+      ~ "Dual purpose",
+      
+      # Contains milk but NOT meat
+      str_detect(`Provision Uses`, regex("milk", ignore_case = TRUE)) &
+        !str_detect(`Provision Uses`, regex("meat", ignore_case = TRUE))
+      ~ "Dairy",
+      
+      # Contains meat but NOT milk
+      str_detect(`Provision Uses`, regex("meat", ignore_case = TRUE)) &
+        !str_detect(`Provision Uses`, regex("milk", ignore_case = TRUE))
+      ~ "Meat",
+      
+      # Everything else
+      TRUE ~ "Other / Unclassified"
+    ),
+    
+    .after = `Provision Uses`
+  )
+view(milk_data)
+
+table(milk_data$Purpose)
+```
+
+```{r}
+library(tidyverse)
+
+tabledata <- europe_data |>
+  mutate(
+    Production_Purpose = case_when(
+      
+      # Contains BOTH meat and milk
+      str_detect(`Provision Uses`, regex("meat", ignore_case = TRUE)) &
+        str_detect(`Provision Uses`, regex("milk", ignore_case = TRUE)) ~ "Dual Purpose",
+      
+      # Contains milk but NOT meat
+      str_detect(`Provision Uses`, regex("milk", ignore_case = TRUE)) &
+        !str_detect(`Provision Uses`, regex("meat", ignore_case = TRUE)) ~ "Dairy",
+      
+      # Contains meat but NOT milk
+      str_detect(`Provision Uses`, regex("meat", ignore_case = TRUE)) &
+        !str_detect(`Provision Uses`, regex("milk", ignore_case = TRUE)) ~ "Meat",
+      
+      # Everything else
+      TRUE ~ "Others"
+    )
+  )
+```
+
+```{r}
+final_classification_table <- tabledata |>
+  mutate(
+    Adaptedness = replace_na(
+      `Breed classification (adaptedness)`,
+      "NA"
+    )
+  ) |>
+  count(Production_Purpose, Adaptedness) |>
+  pivot_wider(
+    names_from = Adaptedness,
+    values_from = n,
+    values_fill = 0
+  ) |>
+  mutate(
+    Total = rowSums(across(where(is.numeric)))
+  )
+final_classification_table <- final_classification_table |>
+  bind_rows(
+    final_classification_table |>
+      summarise(
+        Production_Purpose = "Total",
+        across(where(is.numeric), ~ sum(.x, na.rm = TRUE))
+      )
+  )
+
+final_classification_table
+
+final_classification_table
+```
+
+```{r}
+dual_purpose<- milk_data |> select(ISO3,`Provision Uses`,`Milk per year AVG`,Purpose, `Breed classification (adaptedness)`,`Efabis milk protein AVG`,`Milk fat AVG (%)`,`Milk yield per lactation (kg) AVG`,`Carcass weight (kg)`)
+dual_purpose <- dual_purpose |>
+  mutate(
+    Adaptedness = if_else(
+      is.na(`Breed classification (adaptedness)`),
+      "NA",
+      `Breed classification (adaptedness)`
+    )
+  )
+
+```
+
+```{r}
+unique(dual_purpose$Adaptedness)
+```
+
+### Milk yield per lactation across breeds
+
+```{r}
+dual_purpose_milk<-dual_purpose |> 
+  filter(Purpose%in% c("Dairy","Dual purpose"))
+```
+
+```{r}
+table(
+ dual_purpose_milk$Adaptedness,
+  dual_purpose_milk$Purpose
+)
+```
+
+```{r}
+summary(dual_purpose_milk$`Milk yield per lactation (kg) AVG`)
+
+dual_purpose_milk |>
+  count(Adaptedness, Purpose)
+```
+
+```{r}
+dual_purpose_milk |>
+  select(Adaptedness, Purpose) |>
+  distinct()
+```
+
+```{r}
+ggplot(
+  dual_purpose_milk,
+  aes(
+    x = Adaptedness,
+    y = `Milk yield per lactation (kg) AVG`,
+    fill = Purpose
+  )
+) +
+  geom_boxplot()
+```
+
+### Milk yield across breeds
+
+```{r}
+ggplot(
+  dual_purpose_milk,
+  aes(
+    x = Adaptedness,
+    y = `Milk per year AVG`,
+    fill = Purpose
+  )
+) +
+  geom_boxplot()
+```
+
+### Avg Milk protein
+
+```{r}
+ggplot(
+  dual_purpose_milk,
+  aes(
+    x = Adaptedness,
+    y = `Efabis milk protein AVG`,
+    fill = Purpose
+  )
+) +
+  geom_boxplot()
+```
+
+### Avg Milk fat
+
+```{r}
+
+ggplot(
+  dual_purpose_milk,
+  aes(
+    x = Adaptedness,
+    y = `Milk fat AVG (%)`,
+    fill = Purpose
+  )
+) +
+  geom_boxplot()
+```
+
+### Carcass weight
+
+```{r}
+dual_purpose_meat <- dual_purpose |> 
+  filter(Purpose%in% c("Meat","Dual purpose"))
+ggplot(
+  dual_purpose_meat,
+  aes(
+    x = Adaptedness,
+    y = `Carcass weight (kg)`,
+    fill = Purpose
+  )
+) +
+  geom_boxplot()
+```
+
+# t-test
+
+```{r}
+t.test(
+  `Milk yield per lactation (kg) AVG` ~ Purpose,
+  data = dual_purpose_milk
+)
+
+t.test(
+  `Milk per year AVG` ~ Purpose,
+  data = dual_purpose_milk
+)
+
+t.test(
+  `Efabis milk protein AVG` ~ Purpose,
+  data = dual_purpose_milk
+)
+
+t.test(
+  `Milk fat AVG (%)` ~ Purpose,
+  data = dual_purpose_milk
+)
+
+t.test(
+  `Carcass weight (kg)` ~ Purpose,
+  data = dual_purpose_meat
+)
+```
+
+Does the relationship between Production Purpose and carcass weight differ depending on Adaptedness?
+
+# Anova
+
+#### Meat/ Carcass weight
+
+```{r}
+meat_model_data <- dual_purpose_meat |>
+  filter(Adaptedness != "NA")
+meat_model <- lm(
+  `Carcass weight (kg)` ~ Purpose * Adaptedness,
+  data = meat_model_data
+)
+anova(meat_model)
+```
+
+#### Milk yield per lactation
+
+```{r}
+milk_model_data <- dual_purpose_milk |>
+  filter(Adaptedness != "NA")
+
+milk_lactation_model <- lm(
+  `Milk yield per lactation (kg) AVG` ~ Purpose * Adaptedness,
+  data = milk_model_data
+)
+
+anova(milk_lactation_model)
+```
+
+#### Milk yield per year
+
+```{r}
+milk_model <- lm(
+  `Milk per year AVG` ~ Purpose * Adaptedness,
+  data = milk_model_data
+)
+
+anova(milk_model)
+```
+
+#### Milk protein
+
+```{r}
+milk_model <- lm(
+  `Efabis milk protein AVG` ~ Purpose * Adaptedness,
+  data = milk_model_data
+)
+
+anova(milk_model)
+```
+
+#### Milk fat
+
+```{r}
+milk_model <- lm(
+  `Milk fat AVG (%)` ~ Purpose * Adaptedness,
+  data = milk_model_data
+)
+
+anova(milk_model)
+```
+
+## Checking the zero values
+
+```{r}
+zero_milk <- europe_data |>
+  filter(`Milk per year AVG` == 0) |> 
+  select(`Milk per year AVG`,`Milk yield per lactation (kg) AVG`,`Efabis milk protein AVG`,`Milk fat AVG (%)`,`Carcass weight (kg)`,`Breed classification (adaptedness)`, `Provision Uses`)
+
+View(zero_milk)
+```
+
+```{r}
+zero_milk <- europe_data |>
+  filter(`Milk yield per lactation (kg) AVG` == 0)
+
+View(zero_milk)
+```
+
+```{r}
+zero_milk <- europe_data |>
+  filter(`Efabis milk protein AVG` == 0)
+
+View(zero_milk)
+```
+
+```{r}
+zero_milk <- europe_data |>
+  filter(`Milk fat AVG (%)` == 0)
+
+View(zero_milk)
+```
+
+```{r}
+zero_meat <- europe_data |>
+  filter(`Carcass weight (kg)` == 0)
+
+View(zero_milk)
+```
+
+Checking the overlap in zero values
+
+```{r}
+zero_check <- europe_data |>
+  mutate(
+    zero_year = `Milk per year AVG` == 0,
+    zero_lactation = `Milk yield per lactation (kg) AVG` == 0,
+    zero_protein = `Efabis milk protein AVG` == 0,
+    zero_fat = `Milk fat AVG (%)` == 0,
+    zero_carcass = `Carcass weight (kg)` == 0
+  ) |>
+  filter(if_any(starts_with("zero_"), ~ !is.na(.x) & .x))
+
+View(zero_check)
+```
+
+```{r}
+carcass_check <- dual_purpose_meat |>
+  filter(
+    !is.na(`Carcass weight (kg)`),
+    `Carcass weight (kg)` > 0
+  )
+
+t.test(
+  `Carcass weight (kg)` ~ Purpose,
+  data = carcass_check
+)
+```
+
+```{r}
+carcass_anova <- dual_purpose_meat |>
+  filter(
+    !is.na(`Carcass weight (kg)`),
+    `Carcass weight (kg)` > 0,
+    !is.na(Adaptedness),
+    Adaptedness != "NA"
+  )
+
+carcass_model <- lm(
+  `Carcass weight (kg)` ~ Purpose * Adaptedness,
+  data = carcass_anova
+)
+
+anova(carcass_model)
+```
+
+```{r}
+citation()
+citation("tidyverse")
+
+  
+```
+
+```{r}
+R.version.string
+```
